@@ -379,7 +379,6 @@ async def analyze_batch(file: UploadFile = File(...)) -> BatchSummary:
 
     try:
         from src.inference import predict_batch
-        from src.mitre_mapper import get_severity
 
         results = predict_batch(df)
     except ValueError as exc:

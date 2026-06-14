@@ -22,9 +22,7 @@ Run
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
-from io import StringIO
 
 import pandas as pd
 import requests
