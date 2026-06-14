@@ -1,0 +1,57 @@
+# --- ThreatSense ---
+
+# Data: large CICIDS2017 files — never commit (fetch via scripts/download_data.py)
+data/raw/
+data/processed/
+
+# Trained models & preprocessing artifacts
+models/*.pkl
+models/*.joblib
+*.h5
+*.onnx
+
+# Secrets & environment (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# SQLite database
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing & linting caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
