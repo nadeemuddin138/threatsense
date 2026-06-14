@@ -21,6 +21,19 @@ Built on the CICIDS2017 dataset (2.3 million network flows) as a final-year B.E.
 
 ---
 
+## Screenshots
+
+### Dashboard
+![Dashboard](docs/dashboard.png)
+
+### Confusion Matrix
+![Confusion Matrix](docs/confusion_matrix.png)
+
+### SHAP Feature Importance
+![SHAP](docs/shap_summary.png)
+
+---
+
 ## Results
 
 Trained on 1.85M flows, evaluated on 462K held-out flows:
@@ -53,7 +66,7 @@ threatsense/
 ├── frontend/
 │   └── app.py             # Streamlit dashboard
 ├── tests/                 # 70 pytest tests
-├── docs/                  # Confusion matrix, SHAP plots
+├── docs/                  # Screenshots, confusion matrix, SHAP plots
 └── docker/                # Dockerfiles
 ```
 
@@ -141,14 +154,14 @@ streamlit run frontend/app.py
 ## Tests
 
 ```bash
-pytest tests/ -v   # 70 tests
+pytest tests/ -v   # 71 tests
 ```
 
 ---
 
 ## About
 
-Built by **MOHAMMED Nadeem uddin** — Final-year B.E., AI & Data Science, CBIT Hyderabad.
+Built by **Mohammed Nadeem Uddin** — Final-year B.E., AI & Data Science, CBIT Hyderabad.
 
 - GitHub: [nadeemuddin138](https://github.com/nadeemuddin138)
-- LinkedIn: [Nadeem Uddin](https://www.linkedin.com/in/nadeem-uddin-028996272/)
+- LinkedIn: [Mohammed Nadeem Uddin](https://www.linkedin.com/in/nadeem-uddin-028996272/)
