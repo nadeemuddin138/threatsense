@@ -148,7 +148,7 @@ pytest tests/ -v   # 70 tests
 
 ## About
 
-Built by **Nadeemuddin** — Final-year B.E., AI & Data Science, CBIT Hyderabad.
+Built by **MOKAMMED Nadeem uddin** — Final-year B.E., AI & Data Science, CBIT Hyderabad.
 
 - GitHub: [nadeemuddin138](https://github.com/nadeemuddin138)
-- LinkedIn: [Add your LinkedIn URL here]
+- LinkedIn: [Nadeem Uddin](https://www.linkedin.com/in/nadeem-uddin-028996272/)
