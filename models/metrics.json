@@ -1,0 +1,36 @@
+{
+  "macro_f1": 0.9348,
+  "weighted_f1": 0.9991,
+  "per_class": {
+    "Benign": {
+      "precision": 1.0,
+      "recall": 0.9989,
+      "f1": 0.9994,
+      "support": 395464
+    },
+    "Bot": {
+      "precision": 0.5778,
+      "recall": 0.9965,
+      "f1": 0.7315,
+      "support": 287
+    },
+    "Brute Force": {
+      "precision": 0.9962,
+      "recall": 0.9986,
+      "f1": 0.9974,
+      "support": 2124
+    },
+    "DoS": {
+      "precision": 0.9971,
+      "recall": 0.9996,
+      "f1": 0.9984,
+      "support": 64352
+    },
+    "PortScan": {
+      "precision": 0.9104,
+      "recall": 0.9872,
+      "f1": 0.9472,
+      "support": 391
+    }
+  }
+}

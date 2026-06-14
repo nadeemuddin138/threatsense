@@ -1,0 +1,51 @@
+name: ThreatSense CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. Lint with ruff (fast, replaces flake8 + isort + pyupgrade)
+      - name: Lint with ruff
+        run: |
+          ruff check src/ api/ frontend/ tests/
+
+      # 5. Run tests
+      # Note: tests that require trained .pkl files are skipped in CI
+      # (models are gitignored). Only unit tests run here.
+      - name: Run pytest
+        run: |
+          pytest tests/ -v --tb=short
+
+      # 6. Print summary
+      - name: Summary
+        if: always()
+        run: |
+          echo "### ThreatSense CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Python: 3.12" >> $GITHUB_STEP_SUMMARY
+          echo "- Ruff: lint complete" >> $GITHUB_STEP_SUMMARY
+          echo "- Pytest: unit tests complete" >> $GITHUB_STEP_SUMMARY

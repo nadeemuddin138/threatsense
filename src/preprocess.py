@@ -92,32 +92,34 @@ def _map_label(raw_label: object) -> str | None:
 
 
 def load_raw_data(raw_dir: str | Path) -> pd.DataFrame:
-    """Load and concatenate every CSV in the CICIDS2017 raw directory.
-
-    Reads with a utf-8 -> latin-1 encoding fallback, because some label strings
-    in CICIDS2017 are not valid utf-8.
+    """Load and concatenate every CSV or Parquet file in the raw data directory.
 
     Args:
-        raw_dir: Directory containing the per-day CICIDS2017 CSV files.
+        raw_dir: Directory containing CICIDS2017 data files (.csv or .parquet).
 
     Returns:
-        A single concatenated DataFrame of all raw flows.
-
-    Raises:
-        FileNotFoundError: If raw_dir contains no .csv files.
+        A single concatenated DataFrame of all flows.
     """
     raw_dir = Path(raw_dir)
-    csv_paths = sorted(raw_dir.glob("*.csv"))
-    if not csv_paths:
-        raise FileNotFoundError(f"No CSV files found in {raw_dir.resolve()}")
+    paths = sorted(
+        p for p in raw_dir.iterdir()
+        if p.suffix.lower() in {".csv", ".parquet"}
+    )
+    if not paths:
+        raise FileNotFoundError(
+            f"No .csv or .parquet files found in {raw_dir.resolve()}"
+        )
 
     frames = []
-    for path in csv_paths:
-        try:
-            df = pd.read_csv(path, encoding="utf-8", low_memory=False)
-        except UnicodeDecodeError:
-            logger.warning("utf-8 decode failed for %s, retrying with latin-1", path.name)
-            df = pd.read_csv(path, encoding="latin-1", low_memory=False)
+    for path in paths:
+        if path.suffix.lower() == ".parquet":
+            df = pd.read_parquet(path)
+        else:
+            try:
+                df = pd.read_csv(path, encoding="utf-8", low_memory=False)
+            except UnicodeDecodeError:
+                logger.warning("utf-8 decode failed for %s, retrying with latin-1", path.name)
+                df = pd.read_csv(path, encoding="latin-1", low_memory=False)
         logger.info("Loaded %s (%d rows)", path.name, len(df))
         frames.append(df)
 

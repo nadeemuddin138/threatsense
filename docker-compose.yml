@@ -1,0 +1,54 @@
+version: "3.9"
+
+# ThreatSense — full stack
+#
+# Start:    docker compose up --build
+# Stop:     docker compose down
+# Logs:     docker compose logs -f
+#
+# Ports:
+#   API      -> http://localhost:8000  (Swagger: /docs)
+#   Frontend -> http://localhost:8501
+
+services:
+
+  # ------------------------------------------------------------------
+  # FastAPI backend
+  # ------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    container_name: threatsense-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env                        # loads GROQ_API_KEY etc.
+    volumes:
+      - ./models:/app/models        # trained .pkl files
+      - ./data:/app/data            # processed CSVs + SQLite DB
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # ------------------------------------------------------------------
+  # Streamlit dashboard
+  # ------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: threatsense-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      # Tell the dashboard where to find the API inside Docker's network
+      - API_BASE_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
