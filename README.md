@@ -1,200 +1,154 @@
-# 🛡️ ThreatSense — LLM-Powered SIEM Analyst
+# ThreatSense — LLM-Powered Network Threat Detection
 
-![CI](https://github.com/<your-username>/threatsense/actions/workflows/ci.yml/badge.svg)
-![Python](https://img.shields.io/badge/Python-3.12+-blue)
-![XGBoost](https://img.shields.io/badge/XGBoost-3.2-orange)
-![LangGraph](https://img.shields.io/badge/LangGraph-1.2-green)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.136-teal)
+[![CI](https://github.com/nadeemuddin138/threatsense/actions/workflows/ci.yml/badge.svg)](https://github.com/nadeemuddin138/threatsense/actions)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-> An end-to-end AI/ML system that ingests network flow logs, detects threats,
-> maps them to MITRE ATT\&CK, and auto-generates SOC incident reports using a
-> LangGraph multi-agent pipeline powered by Groq Llama 3.1 70B.
+An end-to-end ML system that detects network threats in real time, maps them to MITRE ATT&CK techniques, and generates structured SOC incident reports using a LangGraph multi-agent pipeline.
+
+Built on the CICIDS2017 dataset (2.3 million network flows) as a final-year B.E. portfolio project.
 
 ---
 
-## 📸 Demo
+## What it does
 
-<!-- Add a GIF of the dashboard here -->
-![Dashboard Demo](docs/demo.gif)
-
----
-
-## 🏗️ Architecture
-
-```
-Network Flow Logs (CICIDS2017)
-        │
-        ▼
-┌─────────────────┐     ┌──────────────────┐
-│  Isolation      │     │    XGBoost       │
-│  Forest         │────▶│    Classifier    │  5 classes:
-│  (Anomaly Score)│     │    (Threat Class)│  Benign / DoS / PortScan
-└─────────────────┘     └────────┬─────────┘  Brute Force / Bot
-                                 │
-                         ┌───────▼────────┐
-                         │  MITRE ATT&CK  │
-                         │  Mapper        │
-                         └───────┬────────┘
-                                 │
-                         ┌───────▼────────┐
-                         │  LangGraph     │  triage → enrich → report
-                         │  Agent         │  (Groq Llama 3.1 70B)
-                         └───────┬────────┘
-                                 │
-              ┌──────────────────┼──────────────────┐
-              ▼                  ▼                   ▼
-        FastAPI Backend     SQLite DB          Streamlit
-        (REST API)          (Incidents)        Dashboard
-```
+1. **Ingests** raw network flow logs (CICIDS2017 format)
+2. **Detects anomalies** using Isolation Forest
+3. **Classifies threats** into 5 categories using XGBoost
+4. **Maps** each threat to MITRE ATT&CK techniques
+5. **Generates** a SOC incident report via a 3-node LangGraph agent (Groq Llama 3.1 70B)
+6. **Serves** everything through a FastAPI backend and Streamlit dashboard
 
 ---
 
-## 📊 Results
+## Results
 
-| Metric | Score |
-|---|---|
-| Macro F1 | **0.9348** |
-| Weighted F1 | **0.9991** |
-| Benign F1 | 1.00 |
-| DoS F1 | 1.00 |
-| Brute Force F1 | 1.00 |
-| PortScan F1 | 0.95 |
-| Bot F1 | 0.73* |
+Trained on 1.85M flows, evaluated on 462K held-out flows:
 
-*Bot has only 1,035 training samples vs 1.4M Benign — class imbalance handled
-via `compute_sample_weight`. All Bot flows are caught (recall = 1.00).
+| Class | Precision | Recall | F1 |
+|---|---|---|---|
+| Benign | 1.00 | 1.00 | 1.00 |
+| DoS | 1.00 | 1.00 | 1.00 |
+| Brute Force | 1.00 | 1.00 | 1.00 |
+| PortScan | 0.91 | 0.99 | 0.95 |
+| Bot | 0.58 | 1.00 | 0.73 |
+| **Macro F1** | | | **0.9348** |
 
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.12+
-- A free [Groq API key](https://console.groq.com) for LLM report generation
-
-### 1. Clone and install
-```bash
-git clone https://github.com/<your-username>/threatsense.git
-cd threatsense
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-### 2. Configure secrets
-```bash
-cp .env.example .env
-# Edit .env and add your GROQ_API_KEY
-```
-
-### 3. Get the dataset
-Download the CICIDS2017 Parquet files from
-[Kaggle](https://www.kaggle.com/datasets/dhoogla/cicids2017) and place
-all `.parquet` files in `data/raw/`.
-
-### 4. Preprocess
-```bash
-python -m src.preprocess --raw-dir data/raw --out-dir data/processed --artifacts-dir models
-```
-
-### 5. Train models
-```bash
-python -m src.train                     # full dataset (~15 min)
-python -m src.train --sample 100000     # fast dev run (~3 min)
-```
-
-### 6. Start the API
-```bash
-uvicorn api.main:app --reload --port 8000
-# Swagger UI → http://localhost:8000/docs
-```
-
-### 7. Start the dashboard
-```bash
-streamlit run frontend/app.py
-# Dashboard → http://localhost:8501
-```
+Bot precision is lower due to extreme class imbalance (1,035 Bot samples vs 1.4M Benign). Class weights ensure 100% Bot recall — in a SOC context, missing an attack is worse than a false positive.
 
 ---
 
-## 📁 Repo Structure
+## Project structure
 
 ```
 threatsense/
-├── data/
-│   ├── raw/            ← CICIDS2017 .parquet files (gitignored)
-│   └── processed/      ← train/test splits (gitignored)
-├── models/             ← trained .pkl files (gitignored)
 ├── src/
-│   ├── preprocess.py   ← CICIDS2017 cleaning pipeline
-│   ├── train.py        ← Isolation Forest + XGBoost training
-│   ├── inference.py    ← prediction engine
-│   ├── mitre_mapper.py ← ATT&CK technique mapping
-│   └── agent.py        ← LangGraph SOC report agent
+│   ├── preprocess.py      # CICIDS2017 cleaning and feature engineering
+│   ├── train.py           # Model training (Isolation Forest + XGBoost + SHAP)
+│   ├── inference.py       # Prediction pipeline
+│   ├── mitre_mapper.py    # MITRE ATT&CK technique mapping
+│   └── agent.py           # LangGraph SOC report agent
 ├── api/
-│   └── main.py         ← FastAPI backend
+│   └── main.py            # FastAPI backend (6 routes, SQLite)
 ├── frontend/
-│   └── app.py          ← Streamlit dashboard
-├── tests/              ← pytest test suite
-├── docs/               ← screenshots, confusion matrix, SHAP plots
-├── docker/             ← Dockerfiles
-└── docker-compose.yml
+│   └── app.py             # Streamlit dashboard
+├── tests/                 # 70 pytest tests
+├── docs/                  # Confusion matrix, SHAP plots
+└── docker/                # Dockerfiles
 ```
 
 ---
 
-## 🔌 API Reference
+## Tech stack
+
+| Component | Technology |
+|---|---|
+| Dataset | CICIDS2017 (2.3M network flows) |
+| Anomaly detection | Isolation Forest (scikit-learn) |
+| Threat classification | XGBoost |
+| Explainability | SHAP |
+| LLM agent | LangGraph + Groq (Llama 3.1 70B) |
+| Backend | FastAPI + SQLite |
+| Frontend | Streamlit |
+| Testing | pytest (70 tests) |
+| CI | GitHub Actions |
+
+---
+
+## Setup
+
+**Requirements:** Python 3.12+, a free [Groq API key](https://console.groq.com)
+
+```bash
+git clone https://github.com/nadeemuddin138/threatsense.git
+cd threatsense
+
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+cp .env.example .env
+# Add your GROQ_API_KEY to .env
+```
+
+**Get the dataset:**
+Download the CICIDS2017 Parquet files from [Kaggle](https://www.kaggle.com/datasets/dhoogla/cicids2017) and place them in `data/raw/`.
+
+**Preprocess and train:**
+```bash
+python -m src.preprocess --raw-dir data/raw --out-dir data/processed --artifacts-dir models
+python -m src.train --sample 100000   # quick run; remove --sample for full training
+```
+
+**Run:**
+```bash
+# Terminal 1 — API
+python -m uvicorn api.main:app --reload --port 8000
+
+# Terminal 2 — Dashboard
+streamlit run frontend/app.py
+```
+
+- API docs: http://localhost:8000/docs
+- Dashboard: http://localhost:8501
+
+---
+
+## API
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/health` | Health check |
-| `POST` | `/predict` | Single flow threat detection |
-| `POST` | `/analyze` | Batch CSV upload + analysis |
-| `POST` | `/report/{id}` | Generate LLM incident report |
-| `GET` | `/incidents` | List all incidents |
-| `GET` | `/incidents/{id}` | Get incident by ID |
-
-Full interactive docs at `http://localhost:8000/docs`
+| GET | `/health` | Health check |
+| POST | `/predict` | Single flow prediction |
+| POST | `/analyze` | Batch CSV upload |
+| POST | `/report/{id}` | Generate SOC incident report |
+| GET | `/incidents` | List stored incidents |
+| GET | `/incidents/{id}` | Get one incident |
 
 ---
 
-## 🧠 Tech Stack
+## MITRE ATT&CK mapping
 
-| Layer | Technology |
-|---|---|
-| ML Models | XGBoost, Isolation Forest, scikit-learn |
-| Explainability | SHAP |
-| LLM Agent | LangGraph, Groq (Llama 3.1 70B) |
-| Backend | FastAPI, SQLite |
-| Frontend | Streamlit |
-| DevOps | Docker Compose, GitHub Actions |
-| Dataset | CICIDS2017 (2.3M network flows) |
-
----
-
-## 🗺️ MITRE ATT&CK Mapping
-
-| Threat Class | Technique | Tactic | Severity |
+| Threat | Technique | Tactic | Severity |
 |---|---|---|---|
-| DoS | T1498, T1499 | Impact | 🔴 Critical |
-| Bot | T1071, T1059 | Command & Control | 🔴 Critical |
-| Brute Force | T1110, T1110.001 | Credential Access | 🟠 High |
-| PortScan | T1046 | Discovery | 🟡 Medium |
-| Benign | — | — | ⚪ None |
+| DoS | T1498, T1499 | Impact | Critical |
+| Bot | T1071, T1059 | Command & Control | Critical |
+| Brute Force | T1110, T1110.001 | Credential Access | High |
+| PortScan | T1046 | Discovery | Medium |
 
 ---
 
-## 🧪 Running Tests
+## Tests
 
 ```bash
-pytest tests/ -v
+pytest tests/ -v   # 70 tests
 ```
 
 ---
 
-## 👤 Author
+## About
 
-**Nadeemuddin** — Final-year B.E. AI & Data Science, CBIT Hyderabad
+Built by **Nadeemuddin** — Final-year B.E., AI & Data Science, CBIT Hyderabad.
 
-- GitHub: [@your-username](https://github.com/your-username)
-- LinkedIn: [your-linkedin](https://linkedin.com/in/your-linkedin)
+- GitHub: [nadeemuddin138](https://github.com/nadeemuddin138)
+- LinkedIn: [Add your LinkedIn URL here]
